@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "GeneticAlgorithmReporter": {
+      "commandName": "Project",
+      "commandLineArgs": "-f chromosomes-non-gene-class.json -g 49"
+    }
+  }
+}
