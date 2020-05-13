@@ -24,7 +24,7 @@ $ GeneticAlgorithmReporter --help
   --version           Display version information.
 ```
 
-Supporter input file are .json with this format
+Supported input file are .json with this format
 ```
 [
     {"Genes":[2,5,17,1]},
