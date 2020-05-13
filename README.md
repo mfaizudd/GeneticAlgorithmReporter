@@ -5,6 +5,7 @@ This project is just for automating my tedious assignment in college, where I ne
 the algorithm that I write here is based on "Genetic Algorithm for Solving Simple Mathematical Equality Problem" paper by Denny Hermawanto
 
 ## How to use it
+Download it from [releases](https://github.com/mfaizudd/GeneticAlgorithmReporter/releases "releases") section
 Just run it in command line, arguments:
 ```
 $ GeneticAlgorithmReporter --help
