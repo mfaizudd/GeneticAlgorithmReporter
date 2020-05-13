@@ -17,7 +17,7 @@ $ GeneticAlgorithmReporter --help
 
   -r, --report        (Default: ) Generate report, specify the name of the report that will be generated (html, txt)
 
-  -g, --generation    (Default: 10) The total generation, default is 10
+  -g, --generation    (Default: 10) The total generation
 
   --help              Display this help screen.
 
