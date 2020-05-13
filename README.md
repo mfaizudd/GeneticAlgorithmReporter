@@ -1,10 +1,10 @@
-#Genetic Algorithm Reporter
+# Genetic Algorithm Reporter
 
 This project is just for automating my tedious assignment in college, where I need to calculate the first 50 generation(with steps) in Genetic Algorithm
 
 the algorithm that I write here is based on "Genetic Algorithm for Solving Simple Mathematical Equality Problem" paper by Denny Hermawanto
 
-##How to use it
+## How to use it
 Just run it in command line, arguments:
 ```
 $ GeneticAlgorithmReporter --help
