@@ -6,7 +6,8 @@ the algorithm that I write here is based on "Genetic Algorithm for Solving Simpl
 
 ## How to use it
 Download it from [releases](https://github.com/mfaizudd/GeneticAlgorithmReporter/releases "releases") section
-Just run it in command line, arguments:
+
+and run it in command line:
 ```
 $ GeneticAlgorithmReporter --help
 
