@@ -8,7 +8,7 @@ using System.Text.Json;
 
 namespace GeneticAlgorithmReporter
 {
-    class GeneticAlgorithm
+    class GeneticAlgorithm<T>
     {
         double crossoverRate = .25;
         double mutationRate;
@@ -16,7 +16,10 @@ namespace GeneticAlgorithmReporter
         string reportPath;
         int documentWidth = 30;
         string report;
-        Chromosome<int>[] chromosomes;
+        Chromosome<T>[] chromosomes;
+
+        public Func<Chromosome<T>, double> ObjectiveFunction { get; set; }
+        public Action<Chromosome<T>, int> MutateFunction { get; set; }
 
         public GeneticAlgorithm(string filepath, double crossoverRate = .25, double mutationRate = .10, int totalGeneration = 10, string reportPath = "")
         {
@@ -34,7 +37,7 @@ namespace GeneticAlgorithmReporter
             {
                 json = stream.ReadToEnd();
             }
-            chromosomes = JsonSerializer.Deserialize<Chromosome<int>[]>(json);
+            chromosomes = JsonSerializer.Deserialize<Chromosome<T>[]>(json);
         }
 
         public void Execute()
@@ -57,16 +60,7 @@ namespace GeneticAlgorithmReporter
                 for (int i = 0; i < chromosomes.Length; i++)
                 {
                     //Console.WriteLine($"Chromosome[{i+1}]: {chromosomes[i]}");
-                    chromosomes[i].ObjectiveFunction = chromosome =>
-                    {
-                        return Math.Abs((chromosome.Genes[0] + 2 * chromosome.Genes[1] + 3 * chromosome.Genes[2] + 4 * chromosome.Genes[3]) - 30);
-                    };
-                    chromosomes[i].MutateFunction = (chromosome, index) =>
-                    {
-                        Random random = new Random();
-                        chromosome.Genes[index] = random.Next(1, 31);
-                    };
-                    fObj[i] = chromosomes[i].Evaluate();
+                    fObj[i] = ObjectiveFunction.Invoke(chromosomes[i]);
                     fitnesses[i] = 1 / (1 + fObj[i]);
                     Print($"F_obj[{i + 1}] = {fObj[i]}");
                     totalFitness += fitnesses[i];
@@ -107,17 +101,15 @@ namespace GeneticAlgorithmReporter
                 }
                 Print();
 
-                Chromosome<int>[] newChromosomes = new Chromosome<int>[chromosomes.Length];
+                Chromosome<T>[] newChromosomes = new Chromosome<T>[chromosomes.Length];
                 for (int i = 0; i < randoms.Length; i++)
                 {
                     for (int j = 0; j < cumulativeProbabilities.Length; j++)
                     {
                         if (randoms[i] > cumulativeProbabilities[j])
                             continue;
-                        newChromosomes[i] = new Chromosome<int>();
-                        newChromosomes[i].Genes = new int[chromosomes[j].Genes.Length];
-                        newChromosomes[i].ObjectiveFunction = chromosomes[j].ObjectiveFunction;
-                        newChromosomes[i].MutateFunction = chromosomes[j].MutateFunction;
+                        newChromosomes[i] = new Chromosome<T>();
+                        newChromosomes[i].Genes = new T[chromosomes[j].Genes.Length];
                         chromosomes[j].Genes.CopyTo(newChromosomes[i].Genes, 0);
                         break;
                     }
@@ -134,7 +126,7 @@ namespace GeneticAlgorithmReporter
                 //Console.WriteLine($"Indexcount:{selectedIndexes.Length}");
                 if (selectedIndexes.Length > 1)
                 {
-                    Dictionary<int, int[]> offsprings = new Dictionary<int, int[]>();
+                    Dictionary<int, T[]> offsprings = new Dictionary<int, T[]>();
                     for (int i = 0; i < selectedIndexes.Length; i++)
                     {
                         int cut = random.Next(1, newChromosomes[selectedIndexes[i]].Genes.Length);
@@ -146,7 +138,7 @@ namespace GeneticAlgorithmReporter
                         var targetgene = newChromosomes[selectedIndexes[targeti]].Genes;
                         Print($"[{string.Join(';', gene)}]><[{string.Join(';', targetgene)}]", centered: true);
 
-                        int[] offspring = new int[gene.Length];
+                        T[] offspring = new T[gene.Length];
                         for (int j = 0; j < offspring.Length; j++)
                         {
                             offspring[j] = gene[j];
@@ -180,7 +172,7 @@ namespace GeneticAlgorithmReporter
                 (int x, int y)[] selectedGenes = SelectGeneForMutation(newChromosomes.Length, newChromosomes[0].Genes.Length).ToArray();
                 foreach (var item in selectedGenes)
                 {
-                    newChromosomes[item.x].Mutate(item.y);
+                    MutateFunction(newChromosomes[item.x], item.y);
                     Print($"Mutated Gene[{item.x + 1}, {item.y}]: {newChromosomes[item.x].Genes[item.y]}");
                 }
                 Print();
@@ -191,11 +183,11 @@ namespace GeneticAlgorithmReporter
                 Print();
 
                 Print("New Generation Objective Function");
-                int min = chromosomes[0].Evaluate();
+                double min = ObjectiveFunction(chromosomes[0]);
                 int minIndex = 0;
                 for (int i = 0; i < chromosomes.Length; i++)
                 {
-                    var eval = chromosomes[i].Evaluate();
+                    var eval = ObjectiveFunction(chromosomes[i]);
                     if (eval < min)
                     {
                         min = eval;
@@ -220,7 +212,7 @@ namespace GeneticAlgorithmReporter
             }
         }
 
-        private void PrintChromosomes(Chromosome<int>[] newChromosomes)
+        private void PrintChromosomes(Chromosome<T>[] newChromosomes)
         {
             for (int i = 0; i < chromosomes.Length; i++)
             {
