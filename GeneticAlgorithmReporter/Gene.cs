@@ -12,7 +12,7 @@ namespace GeneticAlgorithmReporter
         {
             if (value is T)
                 return (T)value;
-            return default(T);
+            return default;
         }
 
         public override string ToString()

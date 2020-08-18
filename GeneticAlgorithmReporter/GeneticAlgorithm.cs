@@ -143,10 +143,11 @@ namespace GeneticAlgorithmReporter
                         Gene[] offspring = new Gene[genes.Length];
                         for (int j = 0; j < offspring.Length; j++)
                         {
-                            offspring[j] = genes[j];
+                            offspring[j] = new Gene();
+                            offspring[j].value = genes[j].value;
                             if (j >= cut)
                             {
-                                offspring[j] = targetGenes[j];
+                                offspring[j].value = targetGenes[j].value;
                             }
                         }
                         Print($"[{string.Join(';', offspring.Cast<object>())}]", centered: true);
