@@ -16,10 +16,10 @@ namespace GeneticAlgorithmReporter
         string reportPath;
         int documentWidth = 30;
         string report;
-        Chromosome<T>[] chromosomes;
+        Chromosome[] chromosomes;
 
-        public Func<Chromosome<T>, double> ObjectiveFunction { get; set; }
-        public Action<Chromosome<T>, int> MutateFunction { get; set; }
+        public Func<Chromosome, double> ObjectiveFunction { get; set; }
+        public Action<Chromosome, int> MutateFunction { get; set; }
 
         public GeneticAlgorithm(string filepath, double crossoverRate = .25, double mutationRate = .10, int totalGeneration = 10, string reportPath = "")
         {
@@ -37,7 +37,7 @@ namespace GeneticAlgorithmReporter
             {
                 json = stream.ReadToEnd();
             }
-            chromosomes = JsonSerializer.Deserialize<Chromosome<T>[]>(json);
+            chromosomes = JsonSerializer.Deserialize<Chromosome[]>(json);
         }
 
         public void Execute()
@@ -101,15 +101,15 @@ namespace GeneticAlgorithmReporter
                 }
                 Print();
 
-                Chromosome<T>[] newChromosomes = new Chromosome<T>[chromosomes.Length];
+                Chromosome[] newChromosomes = new Chromosome[chromosomes.Length];
                 for (int i = 0; i < randoms.Length; i++)
                 {
                     for (int j = 0; j < cumulativeProbabilities.Length; j++)
                     {
                         if (randoms[i] > cumulativeProbabilities[j])
                             continue;
-                        newChromosomes[i] = new Chromosome<T>();
-                        newChromosomes[i].Genes = new T[chromosomes[j].Genes.Length];
+                        newChromosomes[i] = new Chromosome();
+                        newChromosomes[i].Genes = new Gene[chromosomes[j].Genes.Length];
                         chromosomes[j].Genes.CopyTo(newChromosomes[i].Genes, 0);
                         break;
                     }
@@ -126,7 +126,7 @@ namespace GeneticAlgorithmReporter
                 //Console.WriteLine($"Indexcount:{selectedIndexes.Length}");
                 if (selectedIndexes.Length > 1)
                 {
-                    Dictionary<int, T[]> offsprings = new Dictionary<int, T[]>();
+                    Dictionary<int, Gene[]> offsprings = new Dictionary<int, Gene[]>();
                     for (int i = 0; i < selectedIndexes.Length; i++)
                     {
                         int cut = random.Next(1, newChromosomes[selectedIndexes[i]].Genes.Length);
@@ -136,9 +136,9 @@ namespace GeneticAlgorithmReporter
 
                         var gene = newChromosomes[selectedIndexes[i]].Genes;
                         var targetgene = newChromosomes[selectedIndexes[targeti]].Genes;
-                        Print($"[{string.Join(';', gene)}]><[{string.Join(';', targetgene)}]", centered: true);
+                        Print($"[{string.Join(';', (object)gene)}]><[{string.Join(';', (object)targetgene)}]", centered: true);
 
-                        T[] offspring = new T[gene.Length];
+                        Gene[] offspring = new Gene[gene.Length];
                         for (int j = 0; j < offspring.Length; j++)
                         {
                             offspring[j] = gene[j];
@@ -147,7 +147,7 @@ namespace GeneticAlgorithmReporter
                                 offspring[j] = targetgene[j];
                             }
                         }
-                        Print($"[{string.Join(';', offspring)}]", centered: true);
+                        Print($"[{string.Join(';', (object)offspring)}]", centered: true);
                         Print();
                         offsprings.Add(selectedIndexes[i], offspring);
                     }
@@ -212,7 +212,7 @@ namespace GeneticAlgorithmReporter
             }
         }
 
-        private void PrintChromosomes(Chromosome<T>[] newChromosomes)
+        private void PrintChromosomes(Chromosome[] newChromosomes)
         {
             for (int i = 0; i < chromosomes.Length; i++)
             {
