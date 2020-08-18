@@ -18,33 +18,35 @@ namespace GeneticAlgorithmReporter
         string report;
         Chromosome[] chromosomes;
 
-        public Func<Chromosome, double> ObjectiveFunction { get; set; }
-        public Action<Chromosome, int> MutateFunction { get; set; }
+        public IChromosomeOperationProvider operationProvider { get; }
 
-        public GeneticAlgorithm(string filepath, double crossoverRate = .25, double mutationRate = .10, int totalGeneration = 10, string reportPath = "")
+        public GeneticAlgorithm(string filepath, IChromosomeOperationProvider operationProvider, double crossoverRate = .25, double mutationRate = .10, int totalGeneration = 10, string reportPath = "")
         {
             this.crossoverRate = crossoverRate;
             this.mutationRate = mutationRate;
             this.totalGeneration = totalGeneration;
             this.reportPath = reportPath;
+            this.operationProvider = operationProvider;
+
             if (!File.Exists(filepath))
             {
-                Console.WriteLine("Input file doesn't exists");
-                return;
+                throw new FileNotFoundException($"Input file({filepath}) doesn't exists");
             }
             string json;
             using (var stream = new StreamReader(filepath))
             {
                 json = stream.ReadToEnd();
             }
-            chromosomes = JsonSerializer.Deserialize<Chromosome[]>(json);
+            var serializeOptions = new JsonSerializerOptions();
+            serializeOptions.Converters.Add(new GeneConverter());
+            chromosomes = JsonSerializer.Deserialize<Chromosome[]>(json, serializeOptions);
         }
 
         public void Execute()
         {
             for (int generation = 0; generation < totalGeneration; generation++)
             {
-                double[] fObj = new double[chromosomes.Length];
+                object[] objectives = new object[chromosomes.Length];
                 double[] fitnesses = new double[chromosomes.Length];
                 double[] probabilities = new double[chromosomes.Length];
                 double[] cumulativeProbabilities = new double[chromosomes.Length];
@@ -60,9 +62,9 @@ namespace GeneticAlgorithmReporter
                 for (int i = 0; i < chromosomes.Length; i++)
                 {
                     //Console.WriteLine($"Chromosome[{i+1}]: {chromosomes[i]}");
-                    fObj[i] = ObjectiveFunction.Invoke(chromosomes[i]);
-                    fitnesses[i] = 1 / (1 + fObj[i]);
-                    Print($"F_obj[{i + 1}] = {fObj[i]}");
+                    objectives[i] = operationProvider.ObjectiveFunction(chromosomes[i]);
+                    fitnesses[i] = operationProvider.GetChromosomeFitness(objectives[i]);
+                    Print($"F_obj[{i + 1}] = {objectives[i]}");
                     totalFitness += fitnesses[i];
                 }
 
@@ -134,20 +136,20 @@ namespace GeneticAlgorithmReporter
                         Print($"Cut:{cut}", centered: true);
                         Print($"Chromosome[{selectedIndexes[i] + 1}]><Chromosome[{selectedIndexes[targeti] + 1}]", centered: true);
 
-                        var gene = newChromosomes[selectedIndexes[i]].Genes;
-                        var targetgene = newChromosomes[selectedIndexes[targeti]].Genes;
-                        Print($"[{string.Join(';', (object)gene)}]><[{string.Join(';', (object)targetgene)}]", centered: true);
+                        var genes = newChromosomes[selectedIndexes[i]].Genes;
+                        var targetGenes = newChromosomes[selectedIndexes[targeti]].Genes;
+                        Print($"[{string.Join(';', genes.Cast<object>())}]><[{string.Join(';', targetGenes.Cast<object>())}]", centered: true);
 
-                        Gene[] offspring = new Gene[gene.Length];
+                        Gene[] offspring = new Gene[genes.Length];
                         for (int j = 0; j < offspring.Length; j++)
                         {
-                            offspring[j] = gene[j];
+                            offspring[j] = genes[j];
                             if (j >= cut)
                             {
-                                offspring[j] = targetgene[j];
+                                offspring[j] = targetGenes[j];
                             }
                         }
-                        Print($"[{string.Join(';', (object)offspring)}]", centered: true);
+                        Print($"[{string.Join(';', offspring.Cast<object>())}]", centered: true);
                         Print();
                         offsprings.Add(selectedIndexes[i], offspring);
                     }
@@ -172,7 +174,7 @@ namespace GeneticAlgorithmReporter
                 (int x, int y)[] selectedGenes = SelectGeneForMutation(newChromosomes.Length, newChromosomes[0].Genes.Length).ToArray();
                 foreach (var item in selectedGenes)
                 {
-                    MutateFunction(newChromosomes[item.x], item.y);
+                    operationProvider.MutateFunction(ref newChromosomes[item.x].Genes[item.y]);
                     Print($"Mutated Gene[{item.x + 1}, {item.y}]: {newChromosomes[item.x].Genes[item.y]}");
                 }
                 Print();
@@ -183,23 +185,23 @@ namespace GeneticAlgorithmReporter
                 Print();
 
                 Print("New Generation Objective Function");
-                double min = ObjectiveFunction(chromosomes[0]);
-                int minIndex = 0;
+                double max = operationProvider.GetChromosomeFitness(chromosomes[0]);
+                int maxIndex = 0;
                 for (int i = 0; i < chromosomes.Length; i++)
                 {
-                    var eval = ObjectiveFunction(chromosomes[i]);
-                    if (eval < min)
+                    var eval = operationProvider.GetChromosomeFitness(chromosomes[i]);
+                    if (eval > max)
                     {
-                        min = eval;
-                        minIndex = i;
+                        max = eval;
+                        maxIndex = i;
                     }
                     Print($"Chromosome[{i + 1}]={chromosomes[i]}");
-                    Print($"F_obj[{i + 1}]={eval}");
+                    Print($"Fitness[{i + 1}]={eval}");
                     Print();
                 }
                 Print();
 
-                Print($"New best Chromosome[{minIndex + 1}] with F_obj of {min}");
+                Print($"New best Chromosome[{maxIndex + 1}] with fitness of {max}");
                 Print();
             }
 

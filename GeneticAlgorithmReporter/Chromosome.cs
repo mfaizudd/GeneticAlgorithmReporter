@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace GeneticAlgorithmReporter
@@ -17,7 +18,7 @@ namespace GeneticAlgorithmReporter
 
         public override string ToString()
         {
-            return $"[{string.Join(';', (object)Genes)}]";
+            return $"[{string.Join(';', Genes.Select(x=>x.value.ToString()))}]";
         }
     }
 }
