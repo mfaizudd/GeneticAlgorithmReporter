@@ -4,7 +4,7 @@ using System.Text;
 
 namespace GeneticAlgorithmReporter
 {
-    class Gene
+    struct Gene
     {
         public object value;
 
