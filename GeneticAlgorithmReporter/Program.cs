@@ -31,16 +31,8 @@ namespace GeneticAlgorithmReporter
             Parser.Default.ParseArguments<Options>(args)
                 .WithParsed(o =>
                 {
-                    GeneticAlgorithm<double> algorithm = new GeneticAlgorithm<double>(o.FileName, o.CrossoverRate, o.MutationRate, o.TotalGeneration, o.ReportPath);
-                    algorithm.ObjectiveFunction = chromosome =>
-                    {
-                        return Math.Abs((chromosome.Genes[0] + 2 * chromosome.Genes[1] + 3 * chromosome.Genes[2] + 4 * chromosome.Genes[3]) - 30);
-                    };
-                    algorithm.MutateFunction = (chromosome, index) =>
-                    {
-                        Random random = new Random();
-                        chromosome.Genes[index] = random.Next(1, 31);
-                    };
+                    var operationProvider = new ChromosomeOperationProvider();
+                    GeneticAlgorithm<double> algorithm = new GeneticAlgorithm<double>(o.FileName, operationProvider, o.CrossoverRate, o.MutationRate, o.TotalGeneration, o.ReportPath);
                     algorithm.Execute();
                 });
         }
